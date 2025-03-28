@@ -19,8 +19,8 @@ $ uv run ruff check
 $ uv run ruff format
 ```
 
-Launch the app, then try:
+Initialize DB:
 
 ```
-$ TBD
+Run: init.py
 ```
