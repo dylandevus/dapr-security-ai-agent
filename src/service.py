@@ -1,4 +1,3 @@
-import uvicorn
 import json
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -81,6 +80,3 @@ async def run():
         html += json.dumps(item) + "<br/><br/>"
 
     return HTMLResponse(content=html, status_code=200)
-
-
-uvicorn.run(app)

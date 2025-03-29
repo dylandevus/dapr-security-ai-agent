@@ -30,3 +30,10 @@ Run service:
 ```
 Run: service.py
 ```
+
+Docker:
+
+```
+Build $ docker build -t dapr-agent:latest .
+Run   $ docker run --env-file .env -p 127.0.0.1:8000:8000 dapr-agent:latest
+```
