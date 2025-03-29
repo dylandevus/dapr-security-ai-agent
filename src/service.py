@@ -8,15 +8,37 @@ load_dotenv()
 @tool
 def generate_yaml(user_prompt: str) -> str:
     """Generate YAML configuration template file."""
-    yaml_string = "YAML configuration template file content"
+    yaml_string = f"""Generate a YAML file. This file will be used to create SQL and Kibana KQL queries to retrieve results for the user.
+
+    Below is an example of a YAML configuration template file:
+
+    ```
+    {YAML_TEMPLATE_SAMPLE}
+    ```
+    """
     return yaml_string
 
 
 @tool
 def generate_sql(yaml_string: str) -> str:
     """Generate a SQL query and Kibana query (KQL) to get data for security analytics."""
-    print("--- yaml_string", yaml_string)
-    query_string = "SQL query and Kibana query (KQL)"
+    query_string = f"""
+        YAML configuration template is provided below:
+        
+        ```
+        {yaml_string}
+        ```
+
+        The database schemas are provided below:
+
+        ```
+        {SQL_SCHEMAS}
+        ```
+        
+        Generating SQL queries, prioritize performance and utilize techniques such as Common Table Expressions (CTEs) to enhance portability and readability.
+
+        Also generate Kibana query (KQL).
+    """
     return query_string
 
 
@@ -24,18 +46,8 @@ react_agent = ReActAgent(
     name="SecurityAIAgent",
     role="Security AI Agent",
     instructions=[
-        f"""
-You are a Security AI Agent, an application health monitoring system. Your task is to take user prompts in natural language and generate a YAML file. This file will be used to create SQL and Kibana KQL queries to retrieve results for the user. When generating SQL queries, prioritize performance and utilize techniques such as Common Table Expressions (CTEs) to enhance portability and readability. The database schemas are provided below:
-        
-```
-{SQL_SCHEMAS}
-```
-
-Below is an example of a YAML configuration template file:
-
-```
-{YAML_TEMPLATE_SAMPLE}
-```
+        """
+        You are a Security AI Agent, an application health monitoring system. Your task is to take user prompts in natural language.
         """
     ],
     tools=[generate_yaml, generate_sql],
