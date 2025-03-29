@@ -1,3 +1,7 @@
+import uvicorn
+import json
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from dapr_agents import tool, ReActAgent
 from dotenv import load_dotenv
 from config import SQL_SCHEMAS, YAML_TEMPLATE_SAMPLE
@@ -61,10 +65,22 @@ react_agent = ReActAgent(
 # prompt = "The application seems slow during peak hours (working business hours). Create a query to help us understand what's causing it."
 prompt = "Create proactive monitoring for resource utilization across our microservices. We need early warning when any service is trending towards capacity limits, considering historical usage patterns and growth rates."
 
-result = react_agent.run(prompt)
+app = FastAPI()
 
-if len(result) > 0:
-    print("Result:", result)
 
-for item in react_agent.chat_history:
-    print(item, "\n\n")
+@app.get("/run")
+async def run():
+    result = react_agent.run(prompt)
+    print("--- result", result)
+
+    html = ""
+    if len(result) > 0:
+        html += result + "<br/><br/>"
+
+    for item in react_agent.chat_history:
+        html += json.dumps(item) + "<br/><br/>"
+
+    return HTMLResponse(content=html, status_code=200)
+
+
+uvicorn.run(app)
