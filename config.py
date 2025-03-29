@@ -58,3 +58,31 @@ CREATE TABLE resource_utilization (
     status VARCHAR(20) -- e.g., ok, warning, critical
 );
 """
+
+YAML_TEMPLATE_SAMPLE = """
+id: MON-API-ERRORS-AND-LATENCY-001
+name: High API Error Rate (>5%) and Latency (>2s)
+description: >
+  Alert when any API endpoint experiences both an error rate exceeding 5% AND
+  an average response time greater than 2000ms over the last 15 minutes.
+target_entity: api_requests.endpoint
+conditions: # Multiple conditions must be met (AND logic)
+  - metric: error_rate_percentage
+    calculation: "(count(response_code >= 400) / count(*)) * 100"
+    threshold:
+      value: 5
+      condition: '>'
+  - metric: avg_response_time_ms
+    aggregation: average(response_time)
+    threshold:
+      value: 2000
+      condition: '>'
+time_window: 15m
+minimum_traffic_threshold: # Optional
+  metric: request_count
+  window: 15m
+  threshold: 10
+severity: critical
+owner_team: backend_reliability
+runbook_link: /wiki/alerts/MON-API-ERRORS-AND-LATENCY-001
+"""
