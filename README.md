@@ -15,12 +15,18 @@ Install:
 ```
 $ uv venv
 $ uv sync
-$ uv run ruff check
 $ uv run ruff format
+$ uv run ruff check
 ```
 
 Initialize DB:
 
 ```
 Run: init.py
+```
+
+Run service:
+
+```
+Run: service.py
 ```
