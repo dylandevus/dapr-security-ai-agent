@@ -34,7 +34,7 @@ Run: service.py
 Run workflow:
 
 ```
-$ dapr run --app-id dapr-agent-wf -- python workflow.py
+$ dapr run --app-id dapr-agent-wf -- python workflow_main.py
 ```
 
 Docker:
