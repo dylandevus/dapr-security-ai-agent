@@ -97,14 +97,7 @@ def generate_sql(ctx, yaml_template: str):
         return f"Error in generate_sql: {e}"
 
 
-# from fastapi import FastAPI
-
 app = FastAPI()
-
-# wf_client = None
-# wfr.start()
-# sleep(5)  # wait for workflow runtime to start
-# wf_client = wf.DaprWorkflowClient()
 
 
 @app.get("/run")
@@ -119,7 +112,6 @@ async def run(q: str):
         state = wf_client.wait_for_workflow_completion(instance_id)
         print(f"Workflow completed! Status: {state.runtime_status}")
 
-        # print("state", state)
         # wfr.shutdown()
 
         output = state.serialized_output.replace("\\n", "\n").replace("\\t", "\t")

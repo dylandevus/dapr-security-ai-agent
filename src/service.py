@@ -11,13 +11,23 @@ load_dotenv()
 @tool
 def generate_yaml(user_prompt: str) -> str:
     """Generate YAML configuration template content."""
-    prompt = f"""Generate YAML configuration template content. This yaml will be used to create SQL and Kibana KQL queries to retrieve results for the user.
+    prompt = f"""
+    The database schemas are provided below:
 
-    Below is an example of a YAML configuration template content: (for reference only)
+    ```
+    {SQL_SCHEMAS}
+    ```
+    
+    Below is an example of YAML structured blueprint: (for reference only)
 
     ```
     {YAML_TEMPLATE_SAMPLE}
     ```
+
+    Generate a YAML structured blueprint, output only YAML content (no formatting, no triple backticks, etc.),
+    follows closely the database schemas above and the user's prompt in natural language below:
+    
+    User's prompt: {user_prompt}
     """
     return prompt
 
@@ -51,7 +61,8 @@ react_agent = ReActAgent(
     role="Security AI Agent",
     instructions=[
         """
-        You are a Security AI Agent, an application health monitoring system. Your task is to take user prompts in natural language.
+        You are a Security AI Agent, an application health monitoring system.
+        Your task is to take user prompts in natural language.
         """
     ],
     tools=[generate_yaml, generate_sql],
