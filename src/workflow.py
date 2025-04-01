@@ -44,7 +44,8 @@ def generate_yaml(ctx):
                     {YAML_TEMPLATE_SAMPLE}
                     ```
 
-                    Generate a YAML structured blueprint, output only YAML content (no triple backticks), follows closely the database schemas above and the user's prompt in natural language below:
+                    Generate a YAML structured blueprint, output only YAML content (no formatting, no triple backticks, etc.),
+                    follows closely the database schemas above and the user's prompt in natural language below:
                     
                     User's prompt: create proactive monitoring for resource utilization across our microservices. We need early warning when any service is trending towards capacity limits, considering historical usage patterns and growth rates.""",
                 }
@@ -67,7 +68,7 @@ def generate_sql(ctx, yaml_template: str):
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a Security AI Agent, an application health monitoring system. Your task is to take user prompts in natural language.
+                    "content": f"""You are a Security AI Agent, an application health monitoring system.
                     
                     The database schemas are provided below:
 
@@ -81,9 +82,9 @@ def generate_sql(ctx, yaml_template: str):
                     {yaml_template}
                     ```
                     
-                    Generating SQL query, prioritize performance and utilize techniques such as Common Table Expressions (CTEs) to enhance portability and readability.
-
-                    Also generate Kibana query (KQL). """,
+                    Generate SQL query only (no formatting, no backticks, no markdown, etc.), prioritize performance
+                    and utilize techniques such as Common Table Expressions (CTEs) to enhance portability and readability.
+                    """,
                 }
             ],
             model="gpt-4o",

@@ -8,7 +8,7 @@ def main():
         wfr.start()
         sleep(5)  # wait for workflow runtime to start
 
-        uvicorn.run(app, host="0.0.0.0", port=8000, workers=4)
+        uvicorn.run(app, host="0.0.0.0", port=8000)
     except Exception as e:
         print(f"Error during application startup: {e}")
 
