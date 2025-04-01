@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from utils import remove_double_quotes
 from config import SQL_SCHEMAS, YAML_TEMPLATE_SAMPLE
 
 # Load environment variables
@@ -12,13 +13,26 @@ load_dotenv()
 # Initialize Workflow Instance
 wfr = wf.WorkflowRuntime()
 
+MODEL = "gpt-4o"
+DEFAULT_PROMPT = f"""
+You are a Security AI Agent, an application health monitoring system.
+You have access to database schemas and YAML blueprint examples for generating SQL, KQL, and PromQL queries.
+
+The database schemas are provided below:
+
+```
+{SQL_SCHEMAS}
+```
+"""
+
 
 # Define Workflow logic
 @wfr.workflow(name="task_chain_workflow")
 def task_chain_workflow(ctx: wf.DaprWorkflowContext, query: str):
-    result1 = yield ctx.call_activity(generate_yaml, input=query)
-    result2 = yield ctx.call_activity(generate_sql, input=result1)
-    return result2
+    yaml = yield ctx.call_activity(generate_yaml, input=query)
+    sql = yield ctx.call_activity(generate_sql, input=yaml)
+    kql = yield ctx.call_activity(generate_kql, input=yaml)
+    return yaml + "\n\n---\n\n" + sql + "\n\n---\n\n" + kql
 
 
 # Activity 1
@@ -30,27 +44,21 @@ def generate_yaml(ctx, activity_input: str):
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a Security AI Agent, an application health monitoring system.
-                    
-                    The database schemas are provided below:
+                    "content": f"""{DEFAULT_PROMPT}
 
-                    ```
-                    {SQL_SCHEMAS}
-                    ```
-
-                    Below is an example of a YAML structured blueprint: (for reference only)
+                    Below is one example of a YAML structured blueprint: (for reference only)
 
                     ```
                     {YAML_TEMPLATE_SAMPLE}
                     ```
 
-                    Generate a YAML structured blueprint, output only YAML content (no formatting, no triple backticks, etc.),
+                    Generate a new YAML structured blueprint, output only YAML content (no formatting, no triple backticks, etc.),
                     follows closely the database schemas above and the user's prompt in natural language below:
                     
                     User's prompt: {activity_input}""",
                 }
             ],
-            model="gpt-4o",
+            model=MODEL,
         )
         content = response.choices[0].message.content
         return content
@@ -68,13 +76,7 @@ def generate_sql(ctx, yaml_template: str):
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a Security AI Agent, an application health monitoring system.
-                    
-                    The database schemas are provided below:
-
-                    ```
-                    {SQL_SCHEMAS}
-                    ```
+                    "content": f"""{DEFAULT_PROMPT}
 
                     The generated YAML structured blueprint is below:
 
@@ -87,10 +89,42 @@ def generate_sql(ctx, yaml_template: str):
                     """,
                 }
             ],
-            model="gpt-4o",
+            model=MODEL,
         )
         content = response.choices[0].message.content
-        print(f"--- QUERY: {content}")
+        print(f"--- SQL QUERY: {content}")
+        return content
+    except Exception as e:
+        print(f"Error in generate_sql: {e}")
+        return f"Error in generate_sql: {e}"
+
+
+# Activity 3
+@wfr.activity(name="step3")
+def generate_kql(ctx, yaml_template: str):
+    try:
+        client = OpenAI()
+        response = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""{DEFAULT_PROMPT}
+
+                    The generated YAML structured blueprint is below:
+
+                    ```
+                    {yaml_template}
+                    ```
+                    
+                    Generate Kibana KQL query only (no formatting, no backticks, no markdown, etc.), prioritize performance
+                    and enhance portability and readability.
+                    """,
+                }
+            ],
+            model=MODEL,
+        )
+        content = response.choices[0].message.content
+        print(f"--- KQL QUERY: {content}")
         return content
     except Exception as e:
         print(f"Error in generate_sql: {e}")
@@ -115,6 +149,7 @@ async def run(q: str):
         # wfr.shutdown()
 
         output = state.serialized_output.replace("\\n", "\n").replace("\\t", "\t")
+        output = remove_double_quotes(output)
         return HTMLResponse(
             content=f"<pre style='text-wrap: wrap;'>{output}</pre>", status_code=200
         )
