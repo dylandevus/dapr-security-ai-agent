@@ -15,15 +15,15 @@ wfr = wf.WorkflowRuntime()
 
 # Define Workflow logic
 @wfr.workflow(name="task_chain_workflow")
-def task_chain_workflow(ctx: wf.DaprWorkflowContext):
-    result1 = yield ctx.call_activity(generate_yaml)
+def task_chain_workflow(ctx: wf.DaprWorkflowContext, query: str):
+    result1 = yield ctx.call_activity(generate_yaml, input=query)
     result2 = yield ctx.call_activity(generate_sql, input=result1)
     return result2
 
 
 # Activity 1
 @wfr.activity(name="step1")
-def generate_yaml(ctx):
+def generate_yaml(ctx, activity_input: str):
     try:
         client = OpenAI()
         response = client.chat.completions.create(
@@ -47,7 +47,7 @@ def generate_yaml(ctx):
                     Generate a YAML structured blueprint, output only YAML content (no formatting, no triple backticks, etc.),
                     follows closely the database schemas above and the user's prompt in natural language below:
                     
-                    User's prompt: create proactive monitoring for resource utilization across our microservices. We need early warning when any service is trending towards capacity limits, considering historical usage patterns and growth rates.""",
+                    User's prompt: {activity_input}""",
                 }
             ],
             model="gpt-4o",
@@ -108,10 +108,12 @@ app = FastAPI()
 
 
 @app.get("/run")
-async def run():
+async def run(q: str):
     try:
         wf_client = wf.DaprWorkflowClient()
-        instance_id = wf_client.schedule_new_workflow(workflow=task_chain_workflow)
+        instance_id = wf_client.schedule_new_workflow(
+            workflow=task_chain_workflow, input=q
+        )
 
         print(f"Workflow started. Instance ID: {instance_id}")
         state = wf_client.wait_for_workflow_completion(instance_id)

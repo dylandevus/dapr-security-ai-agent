@@ -62,14 +62,14 @@ react_agent = ReActAgent(
 # prompt = "Monitor for scenarios where error rates exceed 5% of total requests per endpoint while also having high response times (>2s) in the last 15 minutes."
 # prompt = "Monitor for scenarios where error rates exceed 5% of total requests per endpoint while also having high response times (>2s) in the last 15 minutes."
 # prompt = "The application seems slow during peak hours (working business hours). Create a query to help us understand what's causing it."
-prompt = "Create proactive monitoring for resource utilization across our microservices. We need early warning when any service is trending towards capacity limits, considering historical usage patterns and growth rates."
+# prompt = "Create proactive monitoring for resource utilization across our microservices. We need early warning when any service is trending towards capacity limits, considering historical usage patterns and growth rates."
 
 app = FastAPI()
 
 
 @app.get("/run")
-async def run():
-    result = react_agent.run(prompt)
+async def run(q: str):
+    result = react_agent.run(q)
     print("--- result", result)
 
     html = ""
